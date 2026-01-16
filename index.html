@@ -1,0 +1,2005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Media Viewer</title>
+    <style>
+        /* CSS Variables for Theming */
+        :root[data-theme="dark"] {
+            --bg-primary: #0a0e14;
+            --bg-secondary: #1a1f2e;
+            --bg-tertiary: #242b3d;
+            --text-primary: #e4e7eb;
+            --text-secondary: #a8b3c5;
+            --text-muted: #6b7280;
+            --border: rgba(100, 116, 139, 0.2);
+            --accent: #6b9eff;
+            --accent-hover: #8ab0ff;
+            --success: #10b981;
+            --error: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --glass: rgba(26, 31, 46, 0.7);
+            --glass-border: rgba(100, 116, 139, 0.3);
+            --shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        :root[data-theme="light"] {
+            --bg-primary: #f8f9fb;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f1f3f5;
+            --text-primary: #1a1f2e;
+            --text-secondary: #4b5563;
+            --text-muted: #9ca3af;
+            --border: rgba(0, 0, 0, 0.1);
+            --accent: #2563eb;
+            --accent-hover: #3b82f6;
+            --success: #10b981;
+            --error: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --glass: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(0, 0, 0, 0.1);
+            --shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* Topbar */
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            box-shadow: var(--shadow);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--accent), var(--success));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            color: white;
+            font-size: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .brand-text h1 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .brand-text p {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            background: var(--bg-tertiary);
+            transform: translateY(-1px);
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+
+        .icon-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .icon-btn:hover {
+            background: var(--bg-tertiary);
+            transform: translateY(-1px);
+        }
+
+        .icon-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .icon-btn.speaking {
+            background: var(--accent);
+            color: white;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: relative;
+        }
+
+        .tooltip::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: -35px;
+            left: 50%;
+            transform: translateX(-50%) scale(0);
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            color: var(--text-primary);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            transition: all 0.2s ease;
+            pointer-events: none;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow);
+            z-index: 10000;
+        }
+
+        .tooltip:hover::after {
+            transform: translateX(-50%) scale(1);
+            opacity: 1;
+        }
+
+        /* Toolbar */
+        .toolbar {
+            background: var(--bg-secondary);
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 200px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 16px 12px 44px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(107, 158, 255, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        .search-icon svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .filter-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        select {
+            padding: 10px 36px 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 16px;
+            transition: all 0.2s ease;
+        }
+
+        select:hover {
+            border-color: var(--accent);
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(107, 158, 255, 0.1);
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 24px;
+            padding-top: 180px; /* Significantly increased to ensure first row is fully visible */
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        
+        /* Add spacing after sticky toolbar */
+        .table-container {
+            margin-top: 60px;
+        }
+
+        .stats-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            padding: 16px 20px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .stats-text {
+            font-size: 14px;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        /* Table */
+        .table-container {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            /* Ensure first row is visible below sticky headers */
+            scroll-margin-top: 120px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 89px;
+            z-index: 10;
+        }
+
+        /* Add extra padding to first tbody row to ensure visibility */
+        tbody tr:first-child td {
+            padding-top: 120px !important;
+        }
+
+        th {
+            padding: 16px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid var(--border);
+            transition: background-color 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background: var(--bg-tertiary);
+        }
+
+        tbody tr.speaking-row {
+            background: rgba(107, 158, 255, 0.1);
+        }
+
+        td {
+            padding: 16px;
+            font-size: 14px;
+        }
+
+        .section-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .section-alternate {
+            background: rgba(59, 130, 246, 0.15);
+            color: #3b82f6;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .section-minute {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .section-buzzer {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 6px;
+            margin-bottom: 4px;
+        }
+
+        .badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent);
+        }
+
+        .answer-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .answer {
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+        .answer.hidden {
+            filter: blur(6px);
+            user-select: none;
+        }
+
+        /* General hidden class for subjects and questions */
+        .content-hidden {
+            filter: blur(6px) !important;
+            user-select: none !important;
+        }
+
+        .media-icons {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .media-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .media-icon:hover:not(.disabled) {
+            background: var(--accent);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .media-icon.disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .media-icon svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .tts-controls {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .lang-select {
+            padding: 6px 28px 6px 8px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 6px center;
+            background-size: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .lang-select:hover {
+            border-color: var(--accent);
+        }
+
+        .lang-select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        /* Empty State */
+        .empty-state {
+            padding: 80px 20px;
+            text-align: center;
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .empty-description {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* Image Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            padding: 20px;
+        }
+
+        .modal.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .modal-close {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background: var(--error);
+            color: white;
+        }
+
+        .modal-body {
+            padding: 24px;
+            max-height: calc(90vh - 80px);
+            overflow: auto;
+        }
+
+        .modal-image {
+            width: 100%;
+            height: auto;
+            border-radius: 12px;
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 20000;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .toast {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 16px 20px;
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            min-width: 300px;
+            max-width: 400px;
+            transform: translateX(400px);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .toast-icon {
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+
+        .toast-icon svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .toast.success { border-left: 3px solid var(--success); }
+        .toast.success .toast-icon { color: var(--success); }
+
+        .toast.error { border-left: 3px solid var(--error); }
+        .toast.error .toast-icon { color: var(--error); }
+
+        .toast.warning { border-left: 3px solid var(--warning); }
+        .toast.warning .toast-icon { color: var(--warning); }
+
+        .toast.info { border-left: 3px solid var(--info); }
+        .toast.info .toast-icon { color: var(--info); }
+
+        .toast-content {
+            flex: 1;
+        }
+
+        .toast-title {
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .toast-message {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        /* File Input */
+        input[type="file"] {
+            display: none;
+        }
+
+        /* Checkbox Control */
+        .checkbox-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--bg-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .checkbox-control:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .checkbox-control input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--accent);
+        }
+
+        .checkbox-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+        /* Edit Mode Styles */
+        .edit-mode {
+            background: rgba(107, 158, 255, 0.05);
+            border: 2px solid var(--accent);
+            border-radius: 8px;
+            padding: 12px;
+        }
+
+        .editable-text {
+            width: 100%;
+            min-height: 60px;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: inherit;
+            line-height: 1.6;
+            resize: vertical;
+            margin-bottom: 8px;
+        }
+
+        .editable-text:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(107, 158, 255, 0.1);
+        }
+
+        .markup-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .markup-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .markup-btn:hover {
+            background: var(--accent);
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .markup-btn svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .edit-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .btn-save {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--success);
+            background: var(--success);
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-save:hover {
+            background: #059669;
+            transform: translateY(-1px);
+        }
+
+        .btn-cancel {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-cancel:hover {
+            background: var(--error);
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .modified-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .modified-indicator svg {
+            width: 12px;
+            height: 12px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-group {
+                flex-wrap: wrap;
+            }
+
+            .stats-bar {
+                flex-direction: column;
+                gap: 12px;
+                align-items: flex-start;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            th, td {
+                padding: 12px 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Topbar -->
+    <div class="topbar">
+        <div class="brand">
+            <div class="logo">Q</div>
+            <div class="brand-text">
+                <h1>Quiz Media Viewer</h1>
+                <p>Review & Manage Quiz Questions</p>
+            </div>
+        </div>
+        <div class="topbar-actions">
+            <button class="icon-btn tooltip" id="theme-toggle" data-tooltip="Toggle Theme" onclick="toggleTheme()">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" id="theme-icon">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                </svg>
+            </button>
+            <button class="btn btn-primary" onclick="document.getElementById('file-input').click()">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                </svg>
+                Load JSON
+            </button>
+            <input type="file" id="file-input" accept=".json">
+        </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <div class="search-box">
+            <div class="search-icon">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+            </div>
+            <input type="text" class="search-input" id="search-input" placeholder="Search questions..." oninput="applyFilters()">
+        </div>
+        <div class="filter-group">
+            <span class="filter-label">Section:</span>
+            <select id="section-filter" onchange="applyFilters()">
+                <option value="all">All Sections</option>
+                <option value="alternate">Alternate</option>
+                <option value="minute">Minute</option>
+                <option value="buzzer">Buzzer</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <span class="filter-label">Team:</span>
+            <select id="team-filter" onchange="applyFilters()">
+                <option value="all">All Teams</option>
+                <option value="1">Team 1</option>
+                <option value="2">Team 2</option>
+                <option value="null">No Team</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <span class="filter-label">Media:</span>
+            <select id="media-filter" onchange="applyFilters()">
+                <option value="">All Media</option>
+                <option value="with-image">With Images</option>
+                <option value="with-audio">With Audio</option>
+                <option value="with-media">With Media</option>
+                <option value="no-media">No Media</option>
+            </select>
+        </div>
+        <button class="btn" onclick="toggleRevealAll()">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+            </svg>
+            Toggle All Answers
+        </button>
+        <button class="btn" onclick="toggleRevealAllContent()">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+            </svg>
+            Toggle All Content
+        </button>
+        <button class="btn" onclick="stopAllSpeech()">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/>
+            </svg>
+            Stop Speech
+        </button>
+        <label class="checkbox-control" for="read-full-text-checkbox">
+            <input type="checkbox" id="read-full-text-checkbox">
+            <span class="checkbox-label">Read Entire Text</span>
+        </label>
+        <button class="btn" onclick="saveAllChanges()" id="save-all-btn" style="display: none;">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+            </svg>
+            Save All Changes
+        </button>
+        <button class="btn btn-primary" onclick="exportJSON()">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            Export JSON
+        </button>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="stats-bar">
+            <div class="stats-text" id="status-text">0 of 0 questions</div>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 80px;">Section</th>
+                        <th style="width: 80px;">Team</th>
+                        <th style="width: 80px;">#</th>
+                        <th style="width: 120px;">Language</th>
+                        <th style="width: 200px;">Subjects</th>
+                        <th>Question</th>
+                        <th>Answer</th>
+                        <th style="width: 120px; text-align: center;">Media</th>
+                        <th style="width: 80px; text-align: center;">Edit</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body">
+                    <tr>
+                        <td colspan="9" class="empty-state">
+                            <div class="empty-icon">📂</div>
+                            <div class="empty-title">No Data Loaded</div>
+                            <div class="empty-description">Click "Load JSON" to import questions</div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Image Modal -->
+    <div class="modal" id="image-modal" onclick="closeImageModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-title" id="modal-title">Image Viewer</div>
+                <button class="modal-close" onclick="closeImageModal()">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <img id="modal-image" class="modal-image" src="" alt="Question Image">
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Audio Player (Hidden) -->
+    <audio id="audio-player" style="display: none;"></audio>
+
+    <script>
+        // Application State
+        const APP = {
+            questions: [],
+            filtered: [],
+            revealAll: false, // For Toggle All Answers
+            revealAllContent: false, // For Toggle All Content
+            currentAudioId: null,
+            currentSpeechId: null,
+            hasModifications: false,
+            voices: {
+                en: null,
+                es: null,
+                fr: null
+            }
+        };
+
+        // Initialize
+        function init() {
+            loadTheme();
+            initializeSpeechSynthesis();
+            
+            // File input handler
+            document.getElementById('file-input').addEventListener('change', loadJSON);
+        }
+
+        // Theme Management
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('theme-icon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>';
+            } else {
+                icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>';
+            }
+        }
+
+        // Speech Synthesis Initialization
+        function initializeSpeechSynthesis() {
+            if (!('speechSynthesis' in window)) {
+                showToast('error', 'Text-to-Speech Not Supported', 'Your browser does not support speech synthesis');
+                return;
+            }
+
+            // Wait for voices to load
+            function loadVoices() {
+                const voices = window.speechSynthesis.getVoices();
+                
+                // Find best voices for each language
+                APP.voices.en = voices.find(v => v.lang.startsWith('en')) || voices[0];
+                APP.voices.es = voices.find(v => v.lang.startsWith('es')) || APP.voices.en;
+                APP.voices.fr = voices.find(v => v.lang.startsWith('fr')) || APP.voices.en;
+
+                console.log('Voices loaded:', {
+                    english: APP.voices.en?.name,
+                    spanish: APP.voices.es?.name,
+                    french: APP.voices.fr?.name
+                });
+            }
+
+            loadVoices();
+            
+            // Voices may load asynchronously
+            if (window.speechSynthesis.onvoiceschanged !== undefined) {
+                window.speechSynthesis.onvoiceschanged = loadVoices;
+            }
+        }
+
+        // Parse text with language markers
+        function parseTextWithMarkers(text, defaultLang, readEntireText) {
+            const chunks = [];
+            const regex = /\[([a-z]{2})\](.*?)\[\/\1\]/g;
+            let lastIndex = 0;
+            let match;
+            let hasMarkers = false;
+
+            while ((match = regex.exec(text)) !== null) {
+                hasMarkers = true;
+                
+                // Add text before marker as default language (only if readEntireText is true)
+                if (match.index > lastIndex && readEntireText) {
+                    const beforeText = text.substring(lastIndex, match.index).trim();
+                    if (beforeText) {
+                        chunks.push({ lang: defaultLang, text: beforeText });
+                    }
+                }
+                
+                // Always add marked text with specified language
+                chunks.push({ lang: match[1], text: match[2].trim() });
+                lastIndex = regex.lastIndex;
+            }
+
+            // Add remaining text after last marker (only if readEntireText is true)
+            if (lastIndex < text.length && readEntireText) {
+                const remainingText = text.substring(lastIndex).trim();
+                if (remainingText) {
+                    chunks.push({ lang: defaultLang, text: remainingText });
+                }
+            }
+
+            // If no markers found, return entire text with default language
+            // (This ensures text without markers is always read regardless of mode)
+            if (!hasMarkers) {
+                chunks.push({ lang: defaultLang, text: text.trim() });
+            }
+
+            return chunks;
+        }
+
+        // Speak text with language support
+        function speakText(text, defaultLang, questionId, type) {
+            if (!text || !text.trim()) return;
+
+            // Stop any current speech
+            window.speechSynthesis.cancel();
+            
+            // Wait for cancel to complete before starting new speech (fixes double-reading bug)
+            setTimeout(() => {
+                // Update current speech ID
+                APP.currentSpeechId = `${questionId}-${type}`;
+                
+                // Add speaking visual feedback
+                updateSpeakingState(questionId, type, true);
+
+                // Check if we should read entire text or only marked portions
+                const readEntireText = document.getElementById('read-full-text-checkbox').checked;
+
+                // Parse text into language chunks based on mode
+                const chunks = parseTextWithMarkers(text, defaultLang, readEntireText);
+                
+                // If no chunks to read (shouldn't happen, but safety check)
+                if (chunks.length === 0) {
+                    updateSpeakingState(questionId, type, false);
+                    APP.currentSpeechId = null;
+                    return;
+                }
+                
+                // Queue utterances for each chunk
+                let currentIndex = 0;
+                
+                function speakNextChunk() {
+                    if (currentIndex >= chunks.length) {
+                        // All chunks spoken
+                        updateSpeakingState(questionId, type, false);
+                        APP.currentSpeechId = null;
+                        return;
+                    }
+
+                    const chunk = chunks[currentIndex];
+                    const utterance = new SpeechSynthesisUtterance(chunk.text);
+                    
+                    // Set voice based on language
+                    utterance.voice = APP.voices[chunk.lang] || APP.voices.en;
+                    utterance.lang = chunk.lang;
+                    utterance.rate = 1.0; // Normal speed
+                    utterance.pitch = 1.0;
+                    utterance.volume = 1.0;
+
+                    utterance.onend = () => {
+                        currentIndex++;
+                        speakNextChunk();
+                    };
+
+                    utterance.onerror = (event) => {
+                        console.error('Speech error:', event);
+                        updateSpeakingState(questionId, type, false);
+                        APP.currentSpeechId = null;
+                    };
+
+                    window.speechSynthesis.speak(utterance);
+                }
+
+                speakNextChunk();
+            }, 50); // 50ms delay to ensure cancel completes
+        }
+
+        // Update speaking visual state
+        function updateSpeakingState(questionId, type, isSpeaking) {
+            const button = document.querySelector(`[data-speech-id="${questionId}-${type}"]`);
+            const row = document.querySelector(`[data-question-id="${questionId}"]`);
+            
+            if (button) {
+                if (isSpeaking) {
+                    button.classList.add('speaking');
+                } else {
+                    button.classList.remove('speaking');
+                }
+            }
+            
+            if (row) {
+                if (isSpeaking) {
+                    row.classList.add('speaking-row');
+                } else {
+                    row.classList.remove('speaking-row');
+                }
+            }
+        }
+
+        // Stop all speech
+        function stopAllSpeech() {
+            window.speechSynthesis.cancel();
+            
+            // Remove all speaking states
+            document.querySelectorAll('.speaking').forEach(el => el.classList.remove('speaking'));
+            document.querySelectorAll('.speaking-row').forEach(el => el.classList.remove('speaking-row'));
+            
+            APP.currentSpeechId = null;
+            showToast('info', 'Speech Stopped', '');
+        }
+
+        // Load JSON
+        async function loadJSON(event) {
+            const file = event.target.files[0];
+            if (!file) {
+                showToast('warning', 'No File Selected', 'Please select a JSON file');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    loadQuestions(data);
+                } catch (err) {
+                    showToast('error', 'Invalid JSON', 'Failed to parse JSON file');
+                    console.error(err);
+                }
+            };
+            reader.readAsText(file);
+            
+            // Reset input
+            event.target.value = '';
+        }
+
+        function loadQuestions(data) {
+            APP.questions = [];
+            
+            // Parse screen-scribe.json format (alternate/minute/buzzer sections)
+            ['alternate', 'minute', 'buzzer'].forEach(section => {
+                if (data[section] && Array.isArray(data[section])) {
+                    data[section].forEach(q => {
+                        APP.questions.push({
+                            id: q.id || `${section}-${q.number}`,
+                            section: q.section || section,
+                            team: q.team !== undefined ? q.team : null,
+                            number: q.number || 0,
+                            question: q.question || '',
+                            answer: q.answer || '',
+                            subjects: q.subjects || [],
+                            visual: q.visual || null,
+                            audio: q.audio || null,
+                            revealed: false, // Answer visibility
+                            subjectsRevealed: true, // Subjects visibility (default: visible)
+                            questionRevealed: true, // Question visibility (default: visible)
+                            rowRevealed: true, // Row-level visibility (default: visible)
+                            defaultLang: 'en', // Default language for TTS
+                            isEditing: false,
+                            isModified: false,
+                            originalQuestion: q.question || '',
+                            originalAnswer: q.answer || ''
+                        });
+                    });
+                }
+            });
+
+            if (APP.questions.length === 0) {
+                showToast('warning', 'No Questions Found', 'The JSON file contains no questions');
+                return;
+            }
+
+            // Update UI
+            APP.filtered = [...APP.questions];
+            renderTable();
+            updateStatusText();
+            showToast('success', 'JSON Loaded', `Successfully loaded ${APP.questions.length} questions`);
+        }
+
+        // Filtering
+        function applyFilters() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            const sectionFilter = document.getElementById('section-filter').value;
+            const teamFilter = document.getElementById('team-filter').value;
+            const mediaFilter = document.getElementById('media-filter').value;
+
+            APP.filtered = APP.questions.filter(q => {
+                // Search filter
+                if (searchTerm) {
+                    const searchable = `${q.question} ${q.answer}`.toLowerCase();
+                    if (!searchable.includes(searchTerm)) return false;
+                }
+
+                // Section filter
+                if (sectionFilter && sectionFilter !== 'all' && q.section !== sectionFilter) return false;
+
+                // Team filter
+                if (teamFilter && teamFilter !== 'all') {
+                    if (teamFilter === 'null') {
+                        if (q.team !== null) return false;
+                    } else {
+                        if (q.team !== parseInt(teamFilter)) return false;
+                    }
+                }
+
+                // Media filter
+                if (mediaFilter) {
+                    const hasImage = !!q.visual;
+                    const hasAudio = !!q.audio;
+                    
+                    switch (mediaFilter) {
+                        case 'with-image':
+                            if (!hasImage) return false;
+                            break;
+                        case 'with-audio':
+                            if (!hasAudio) return false;
+                            break;
+                        case 'with-media':
+                            if (!hasImage && !hasAudio) return false;
+                            break;
+                        case 'no-media':
+                            if (hasImage || hasAudio) return false;
+                            break;
+                    }
+                }
+
+                return true;
+            });
+
+            renderTable();
+            updateStatusText();
+        }
+
+        function updateStatusText() {
+            document.getElementById('status-text').textContent = 
+                `${APP.filtered.length} of ${APP.questions.length} questions`;
+        }
+
+        // Table Rendering
+        function renderTable() {
+            const tbody = document.getElementById('table-body');
+            
+            if (APP.filtered.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="empty-state">
+                            <div class="empty-icon">🔍</div>
+                            <div class="empty-title">No Questions Found</div>
+                            <div class="empty-description">Try adjusting your filters</div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = APP.filtered.map(q => {
+                const teamDisplay = q.team !== null ? q.team : '—';
+                const sectionClass = `section-${q.section}`;
+                
+                // Render edit mode
+                if (q.isEditing) {
+                    return `
+                        <tr data-question-id="${q.id}" class="edit-mode">
+                            <td>
+                                <span class="section-badge ${sectionClass}">${q.section}</span>
+                            </td>
+                            <td style="text-align: center; color: var(--text-secondary); font-weight: 600;">
+                                ${teamDisplay}
+                            </td>
+                            <td style="color: var(--text-muted); font-family: monospace;">
+                                ${q.number}
+                            </td>
+                            <td>
+                                <select class="lang-select" onchange="updateQuestionLanguage('${q.id}', this.value)">
+                                    <option value="en" ${q.defaultLang === 'en' ? 'selected' : ''}>🇬🇧 EN</option>
+                                    <option value="es" ${q.defaultLang === 'es' ? 'selected' : ''}>🇪🇸 ES</option>
+                                    <option value="fr" ${q.defaultLang === 'fr' ? 'selected' : ''}>🇫🇷 FR</option>
+                                </select>
+                            </td>
+                            <td>
+                                ${renderSubjects(q.subjects)}
+                            </td>
+                            <td colspan="2">
+                                <div style="margin-bottom: 12px;">
+                                    <strong style="font-size: 12px; color: var(--text-secondary); text-transform: uppercase;">Question:</strong>
+                                    <textarea class="editable-text" id="edit-question-${q.id}" rows="3">${escapeHtml(q.question)}</textarea>
+                                    <div class="markup-controls">
+                                        <button class="markup-btn" onclick="wrapSelectedText('edit-question-${q.id}', 'fr')">
+                                            <span>🇫🇷</span> FR
+                                        </button>
+                                        <button class="markup-btn" onclick="wrapSelectedText('edit-question-${q.id}', 'es')">
+                                            <span>🇪🇸</span> ES
+                                        </button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <strong style="font-size: 12px; color: var(--text-secondary); text-transform: uppercase;">Answer:</strong>
+                                    <textarea class="editable-text" id="edit-answer-${q.id}" rows="2">${escapeHtml(q.answer)}</textarea>
+                                    <div class="markup-controls">
+                                        <button class="markup-btn" onclick="wrapSelectedText('edit-answer-${q.id}', 'fr')">
+                                            <span>🇫🇷</span> FR
+                                        </button>
+                                        <button class="markup-btn" onclick="wrapSelectedText('edit-answer-${q.id}', 'es')">
+                                            <span>🇪🇸</span> ES
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="edit-actions">
+                                    <button class="btn-save" onclick="saveEdit('${q.id}')">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 14px; height: 14px; display: inline;">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                        </svg>
+                                        Save
+                                    </button>
+                                    <button class="btn-cancel" onclick="cancelEdit('${q.id}')">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 14px; height: 14px; display: inline;">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                        </svg>
+                                        Cancel
+                                    </button>
+                                </div>
+                            </td>
+                            <td style="text-align: center;">
+                                <div class="media-icons" style="justify-content: center;">
+                                    <button class="media-icon tooltip ${q.visual ? '' : 'disabled'}" 
+                                        data-tooltip="${q.visual ? 'View Image' : 'No Image'}"
+                                        onclick="openImage('${q.id}')" 
+                                        ${q.visual ? '' : 'disabled'}>
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                        </svg>
+                                    </button>
+                                    <button class="media-icon tooltip ${q.audio ? '' : 'disabled'}" 
+                                        data-tooltip="${q.audio ? 'Play Audio' : 'No Audio'}"
+                                        onclick="playAudio('${q.id}')" 
+                                        ${q.audio ? '' : 'disabled'}>
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </td>
+                            <td style="text-align: center;">
+                                <span style="color: var(--text-muted); font-size: 12px;">Editing...</span>
+                            </td>
+                        </tr>
+                    `;
+                }
+                
+                // Render normal mode
+                return `
+                    <tr data-question-id="${q.id}">
+                        <td>
+                            <span class="section-badge ${sectionClass}">${q.section}</span>
+                        </td>
+                        <td style="text-align: center; color: var(--text-secondary); font-weight: 600;">
+                            ${teamDisplay}
+                        </td>
+                        <td style="color: var(--text-muted); font-family: monospace;">
+                            ${q.number}
+                        </td>
+                        <td>
+                            <select class="lang-select" onchange="updateQuestionLanguage('${q.id}', this.value)">
+                                <option value="en" ${q.defaultLang === 'en' ? 'selected' : ''}>🇬🇧 EN</option>
+                                <option value="es" ${q.defaultLang === 'es' ? 'selected' : ''}>🇪🇸 ES</option>
+                                <option value="fr" ${q.defaultLang === 'fr' ? 'selected' : ''}>🇫🇷 FR</option>
+                            </select>
+                        </td>
+                        <td>
+                            <div class="${q.subjectsRevealed ? '' : 'content-hidden'}" style="line-height: 1.6;">
+                                ${renderSubjects(q.subjects)}
+                            </div>
+                            <div class="answer-wrapper" style="margin-top: 8px;">
+                                <button class="icon-btn tooltip" style="width: 28px; height: 28px;" 
+                                    data-tooltip="${q.subjectsRevealed ? 'Hide Subjects' : 'Show Subjects'}"
+                                    onclick="toggleSubjects('${q.id}')">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 14px; height: 14px;">
+                                        ${q.subjectsRevealed ? 
+                                            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>' :
+                                            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>'
+                                        }
+                                    </svg>
+                                </button>
+                                <span style="font-size: 11px; color: var(--text-muted); font-weight: 600;">
+                                    ${q.subjectsRevealed ? 'Subjects shown' : 'Subjects hidden'}
+                                </span>
+                            </div>
+                            ${q.isModified ? '<div style="margin-top: 4px;"><span class="modified-indicator"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Modified</span></div>' : ''}
+                        </td>
+                        <td>
+                            <div class="${q.questionRevealed ? '' : 'content-hidden'}" style="line-height: 1.6;">${escapeHtml(q.question)}</div>
+                            <div class="tts-controls" style="margin-top: 8px;">
+                                <button class="icon-btn tooltip" style="width: 28px; height: 28px;" 
+                                    data-tooltip="Read Question"
+                                    data-speech-id="${q.id}-question"
+                                    onclick="speakText(\`${escapeForJs(q.question)}\`, '${q.defaultLang}', '${q.id}', 'question')">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 14px; height: 14px;">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
+                                    </svg>
+                                </button>
+                                <div class="answer-wrapper">
+                                    <button class="icon-btn tooltip" style="width: 28px; height: 28px;" 
+                                        data-tooltip="${q.questionRevealed ? 'Hide Question' : 'Show Question'}"
+                                        onclick="toggleQuestion('${q.id}')">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 14px; height: 14px;">
+                                            ${q.questionRevealed ? 
+                                                '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>' :
+                                                '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>'
+                                            }
+                                        </svg>
+                                    </button>
+                                    <span style="font-size: 11px; color: var(--text-muted); font-weight: 600;">
+                                        ${q.questionRevealed ? 'Question shown' : 'Question hidden'}
+                                    </span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="answer ${q.revealed ? '' : 'hidden'}">${escapeHtml(q.answer)}</div>
+                            <div class="tts-controls" style="margin-top: 8px;">
+                                ${q.revealed ? `
+                                    <button class="icon-btn tooltip" style="width: 28px; height: 28px;" 
+                                        data-tooltip="Read Answer"
+                                        data-speech-id="${q.id}-answer"
+                                        onclick="speakText(\`${escapeForJs(q.answer)}\`, '${q.defaultLang}', '${q.id}', 'answer')">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 14px; height: 14px;">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
+                                        </svg>
+                                    </button>
+                                ` : ''}
+                                <div class="answer-wrapper">
+                                    <button class="icon-btn tooltip" style="width: 28px; height: 28px;" 
+                                        data-tooltip="${q.revealed ? 'Hide Answer' : 'Show Answer'}"
+                                        onclick="toggleAnswer('${q.id}')">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 14px; height: 14px;">
+                                            ${q.revealed ? 
+                                                '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>' :
+                                                '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>'
+                                            }
+                                        </svg>
+                                    </button>
+                                    <span style="font-size: 11px; color: var(--text-muted); font-weight: 600;">
+                                        ${q.revealed ? 'Answer shown' : 'Answer hidden'}
+                                    </span>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="text-align: center;">
+                            <div class="media-icons" style="justify-content: center;">
+                                <button class="media-icon tooltip ${q.visual ? '' : 'disabled'}" 
+                                    data-tooltip="${q.visual ? 'View Image' : 'No Image'}"
+                                    onclick="openImage('${q.id}')" 
+                                    ${q.visual ? '' : 'disabled'}>
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                </button>
+                                <button class="media-icon tooltip ${q.audio ? '' : 'disabled'}" 
+                                    data-tooltip="${q.audio ? 'Play Audio' : 'No Audio'}"
+                                    onclick="playAudio('${q.id}')" 
+                                    ${q.audio ? '' : 'disabled'}>
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </td>
+                        <td style="text-align: center;">
+                            <div style="display: flex; gap: 8px; justify-content: center; align-items: center;">
+                                <button class="icon-btn tooltip" data-tooltip="${q.rowRevealed ? 'Hide Row' : 'Show Row'}" onclick="toggleRow('${q.id}')">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        ${q.rowRevealed ? 
+                                            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>' :
+                                            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>'
+                                        }
+                                    </svg>
+                                </button>
+                                <button class="icon-btn tooltip" data-tooltip="Edit Question" onclick="enterEditMode('${q.id}')">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderSubjects(subjects) {
+            if (!subjects || subjects.length === 0) {
+                return '<span style="color: var(--text-muted); font-size: 12px;">—</span>';
+            }
+            return subjects.map(s => 
+                `<span class="badge"><span class="badge-dot"></span>${escapeHtml(s)}</span>`
+            ).join('');
+        }
+
+        // Edit Mode Functions
+        function enterEditMode(id) {
+            const question = APP.questions.find(q => q.id === id);
+            if (question) {
+                question.isEditing = true;
+                renderTable();
+            }
+        }
+
+        function cancelEdit(id) {
+            const question = APP.questions.find(q => q.id === id);
+            if (question) {
+                question.isEditing = false;
+                // Restore original values if not yet saved
+                if (!question.isModified) {
+                    question.question = question.originalQuestion;
+                    question.answer = question.originalAnswer;
+                }
+                renderTable();
+            }
+        }
+
+        function saveEdit(id) {
+            const question = APP.questions.find(q => q.id === id);
+            if (!question) return;
+
+            // Get edited values
+            const questionTextarea = document.getElementById(`edit-question-${id}`);
+            const answerTextarea = document.getElementById(`edit-answer-${id}`);
+
+            if (!questionTextarea || !answerTextarea) return;
+
+            const newQuestion = questionTextarea.value.trim();
+            const newAnswer = answerTextarea.value.trim();
+
+            // Check if changes were made
+            if (newQuestion !== question.originalQuestion || newAnswer !== question.originalAnswer) {
+                question.isModified = true;
+                APP.hasModifications = true;
+                updateSaveAllButtonVisibility();
+            }
+
+            // Update question
+            question.question = newQuestion;
+            question.answer = newAnswer;
+            question.isEditing = false;
+
+            renderTable();
+            showToast('success', 'Changes Saved', `Question #${question.number} updated`);
+        }
+
+        function wrapSelectedText(textareaId, lang) {
+            const textarea = document.getElementById(textareaId);
+            if (!textarea) return;
+
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const selectedText = textarea.value.substring(start, end);
+
+            if (!selectedText) {
+                showToast('warning', 'No Text Selected', 'Please select text to mark up');
+                return;
+            }
+
+            // Wrap selected text with language markers
+            const wrappedText = `[${lang}]${selectedText}[/${lang}]`;
+            const before = textarea.value.substring(0, start);
+            const after = textarea.value.substring(end);
+
+            textarea.value = before + wrappedText + after;
+
+            // Set cursor position after the wrapped text
+            const newCursorPos = start + wrappedText.length;
+            textarea.setSelectionRange(newCursorPos, newCursorPos);
+            textarea.focus();
+
+            showToast('success', 'Text Marked', `Added ${lang.toUpperCase()} markers`);
+        }
+
+        function saveAllChanges() {
+            const modifiedQuestions = APP.questions.filter(q => q.isModified);
+            
+            if (modifiedQuestions.length === 0) {
+                showToast('info', 'No Changes', 'No modifications to save');
+                return;
+            }
+
+            // Commit all changes by updating original values
+            modifiedQuestions.forEach(q => {
+                q.originalQuestion = q.question;
+                q.originalAnswer = q.answer;
+                q.isModified = false;
+            });
+
+            APP.hasModifications = false;
+            updateSaveAllButtonVisibility();
+            renderTable();
+
+            showToast('success', 'All Changes Saved', `${modifiedQuestions.length} question(s) updated`);
+        }
+
+        function updateSaveAllButtonVisibility() {
+            const saveAllBtn = document.getElementById('save-all-btn');
+            if (saveAllBtn) {
+                saveAllBtn.style.display = APP.hasModifications ? 'flex' : 'none';
+            }
+        }
+
+        function exportJSON() {
+            if (APP.questions.length === 0) {
+                showToast('warning', 'No Data', 'No questions to export');
+                return;
+            }
+
+            // Reconstruct original JSON format (alternate/minute/buzzer sections)
+            const exportData = {
+                alternate: [],
+                minute: [],
+                buzzer: []
+            };
+
+            APP.questions.forEach(q => {
+                const questionData = {
+                    id: q.id,
+                    section: q.section,
+                    team: q.team,
+                    number: q.number,
+                    question: q.question,
+                    answer: q.answer,
+                    subjects: q.subjects,
+                    visual: q.visual,
+                    audio: q.audio
+                };
+
+                if (q.section === 'alternate') {
+                    exportData.alternate.push(questionData);
+                } else if (q.section === 'minute') {
+                    exportData.minute.push(questionData);
+                } else if (q.section === 'buzzer') {
+                    exportData.buzzer.push(questionData);
+                }
+            });
+
+            // Create download
+            const jsonString = JSON.stringify(exportData, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `quiz-questions-${Date.now()}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showToast('success', 'JSON Exported', 'File downloaded successfully');
+        }
+
+        // Update question language
+        function updateQuestionLanguage(id, lang) {
+            const question = APP.questions.find(q => q.id === id);
+            if (question) {
+                question.defaultLang = lang;
+                showToast('info', 'Language Updated', `Default language set to ${lang.toUpperCase()}`);
+            }
+        }
+
+        // Answer Toggle
+        function toggleAnswer(id) {
+            const question = APP.questions.find(q => q.id === id);
+            if (question) {
+                question.revealed = !question.revealed;
+                // Update row state: row is revealed only if all three columns are revealed
+                question.rowRevealed = question.subjectsRevealed && question.questionRevealed && question.revealed;
+                renderTable();
+            }
+        }
+
+        function toggleSubjects(id) {
+            const question = APP.questions.find(q => q.id === id);
+            if (question) {
+                question.subjectsRevealed = !question.subjectsRevealed;
+                // Update row state: row is revealed only if all three columns are revealed
+                question.rowRevealed = question.subjectsRevealed && question.questionRevealed && question.revealed;
+                renderTable();
+            }
+        }
+
+        function toggleQuestion(id) {
+            const question = APP.questions.find(q => q.id === id);
+            if (question) {
+                question.questionRevealed = !question.questionRevealed;
+                // Update row state: row is revealed only if all three columns are revealed
+                question.rowRevealed = question.subjectsRevealed && question.questionRevealed && question.revealed;
+                renderTable();
+            }
+        }
+
+        function toggleRow(id) {
+            const question = APP.questions.find(q => q.id === id);
+            if (question) {
+                // Toggle row state
+                question.rowRevealed = !question.rowRevealed;
+                
+                // Synchronize all column visibility states with row state
+                question.subjectsRevealed = question.rowRevealed;
+                question.questionRevealed = question.rowRevealed;
+                question.revealed = question.rowRevealed;
+                
+                renderTable();
+            }
+        }
+
+        function toggleRevealAll() {
+            APP.revealAll = !APP.revealAll;
+            APP.questions.forEach(q => {
+                q.revealed = APP.revealAll;
+                // Update row state based on all column states
+                q.rowRevealed = q.subjectsRevealed && q.questionRevealed && q.revealed;
+            });
+            renderTable();
+            showToast('info', APP.revealAll ? 'All Answers Revealed' : 'All Answers Hidden', '');
+        }
+
+        function toggleRevealAllContent() {
+            APP.revealAllContent = !APP.revealAllContent;
+            APP.questions.forEach(q => {
+                q.subjectsRevealed = APP.revealAllContent;
+                q.questionRevealed = APP.revealAllContent;
+                q.revealed = APP.revealAllContent;
+                q.rowRevealed = APP.revealAllContent;
+            });
+            renderTable();
+            showToast('info', APP.revealAllContent ? 'All Content Revealed' : 'All Content Hidden', '');
+        }
+
+        // Media Handling
+        function openImage(id) {
+            const question = APP.questions.find(q => q.id === id);
+            if (!question || !question.visual) return;
+
+            document.getElementById('modal-image').src = question.visual;
+            document.getElementById('modal-title').textContent = 
+                `${question.section.toUpperCase()}${question.team !== null ? ' Team ' + question.team : ''} #${question.number}`;
+            document.getElementById('image-modal').classList.add('active');
+        }
+
+        function closeImageModal() {
+            document.getElementById('image-modal').classList.remove('active');
+            setTimeout(() => {
+                document.getElementById('modal-image').src = '';
+            }, 300);
+        }
+
+        function playAudio(id) {
+            const question = APP.questions.find(q => q.id === id);
+            if (!question || !question.audio) return;
+
+            const player = document.getElementById('audio-player');
+
+            if (APP.currentAudioId === id) {
+                if (player.paused) {
+                    player.play();
+                    showToast('info', 'Audio Playing', '');
+                } else {
+                    player.pause();
+                    showToast('info', 'Audio Paused', '');
+                }
+                return;
+            }
+
+            player.src = question.audio;
+            APP.currentAudioId = id;
+            player.play();
+            showToast('info', 'Audio Playing', `${question.section.toUpperCase()} #${question.number}`);
+
+            player.onended = () => {
+                APP.currentAudioId = null;
+            };
+        }
+
+        // Toast Notifications
+        function showToast(type, title, message) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icons = {
+                success: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>',
+                error: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>',
+                warning: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>',
+                info: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>'
+            };
+
+            toast.innerHTML = `
+                <div class="toast-icon">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        ${icons[type]}
+                    </svg>
+                </div>
+                <div class="toast-content">
+                    <div class="toast-title">${title}</div>
+                    ${message ? `<div class="toast-message">${message}</div>` : ''}
+                </div>
+            `;
+
+            container.appendChild(toast);
+            
+            setTimeout(() => toast.classList.add('show'), 10);
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Utility Functions
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function escapeForJs(input) {
+            // Safely escape arbitrary values for use inside a JS template literal that is embedded in an HTML attribute.
+            // This prevents crashes when the value isn't a string (e.g., arrays/null) and avoids breaking the template literal.
+            const text = (input === null || input === undefined) ? '' : String(input);
+            return text
+                .replace(/\\/g, '\\\\')   // escape backslashes first
+                .replace(/`/g, '\\`')         // escape backticks used by template literals
+                .replace(/\$\{/g, '\\${')   // escape template literal interpolation
+                .replace(/\r/g, '\\r')       // keep attributes on one line
+                .replace(/\n/g, '\\n');
+        }
+
+        // Initialize app
+        init();
+    </script>
+</body>
+</html>
